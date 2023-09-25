@@ -6,7 +6,7 @@ echo "$ID" "$RANUID"
 FROM="davs://xrootd-sense-ucsd-01.sdsc.optiputer.net:1094//testSourceFile$ID"
 TO="davs://sense-origin-01.ultralight.org:1094/store/temp/testDestFile$RANUID"
 count=0
-while [ $count -ne 500 ]
+while [ $count -ne 100000 ]
 do
   gfal-copy --just-copy --copy-mode pull -p -f $FROM $TO
   gfal-rm $TO
