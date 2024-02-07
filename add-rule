@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import argparse
+from rucio.client import Client
+import random
+import string
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Args')
+    parser.add_argument('--priority', type=int, help='prio')
+    parser.add_argument('--dataset', type=str, help='dataset')
+    parser.add_argument('--size', type=int, default=5000, help='end_file_num')
+    parser.add_argument('--source', type=str, default="T2_US_SDSC", help='source')
+    parser.add_argument('--destination', type=str, default="T2_US_Caltech_Test", help='destination')
+
+    args = parser.parse_args()
+
+    client = Client()
+
+    CONTAINER_SUFFIX = ''.join(random.choices(string.ascii_uppercase, k=4))
+
+    DATASETS = args.dataset.split(",")
+
+    for dataset in DATASETS:
+      FILES = [f"/store/data/Run2018A/EGamma/MINIAOD/UL2018_MiniAODv2-v1/{dataset}/testSourceFile{j}.root" for j in range(args.size)]
+
+      DIDS = [{"scope": "cms", "name": f} for f in FILES]
+      DIDS_W_BYTES = [{"scope": "cms", "name": f, "bytes": 1073741824} for f in FILES]
+
+      try:
+        client.add_replicas(
+          args.source, DIDS_W_BYTES
+        )
+      except Exception as e:
+        print(e)
+
+      try:
+        client.add_dataset("cms", f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}")
+      except Exception as e:
+        print(e)
+
+      try:
+        client.add_files_to_datasets(
+          [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}", "dids": DIDS}]
+        )
+      except Exception as e:
+        print(e)
+
+    try:
+      client.add_container("cms", f"/SenseTest/Run3/{CONTAINER_SUFFIX}")
+    except Exception as e:
+      print(e)
+
+    DATASETS_FOR_CONTAINER = [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"} for dataset in DATASETS]
+    try:
+      client.add_datasets_to_containers(
+        [{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}", "dids": DATASETS_FOR_CONTAINER}]
+        )
+    except Exception as e:
+      print(e)
+    
+    rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
+      copies=1,
+      meta="sense",
+      rse_expression=args.destination,
+      priority=args.priority,
+      source_replica_expression=args.source)
+    
+    print(rule)
