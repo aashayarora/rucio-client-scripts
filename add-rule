@@ -9,7 +9,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Args')
     parser.add_argument('--priority', type=int, help='prio')
     parser.add_argument('--dataset', type=str, help='dataset')
-    parser.add_argument('--size', type=int, default=5000, help='end_file_num')
+    parser.add_argument('--size', type=int, default=1000, help='end_file_num')
     parser.add_argument('--source', type=str, default="T2_US_SDSC", help='source')
     parser.add_argument('--destination', type=str, default="T2_US_Caltech_Test", help='destination')
 
@@ -21,12 +21,14 @@ if __name__ == '__main__':
 
     DATASETS = args.dataset.split(",")
 
-    for dataset in DATASETS:
+    for dataset in range(int(DATASETS[0]), int(DATASETS[1])+1000, 1000):
+      print(f"Adding dataset {dataset} to container")
       FILES = [f"/store/data/Run2018A/EGamma/MINIAOD/UL2018_MiniAODv2-v1/{dataset}/testSourceFile{j}.root" for j in range(args.size)]
 
       DIDS = [{"scope": "cms", "name": f} for f in FILES]
-      DIDS_W_BYTES = [{"scope": "cms", "name": f, "bytes": 1073741824} for f in FILES]
+      DIDS_W_BYTES = [{"scope": "cms", "name": f, "bytes": 4294967296} for f in FILES]
 
+      print(DIDS_W_BYTES[0], DIDS_W_BYTES[-1])
       try:
         client.add_replicas(
           args.source, DIDS_W_BYTES
@@ -51,7 +53,7 @@ if __name__ == '__main__':
     except Exception as e:
       print(e)
 
-    DATASETS_FOR_CONTAINER = [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"} for dataset in DATASETS]
+    DATASETS_FOR_CONTAINER = [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"} for dataset in range(int(DATASETS[0]), int(DATASETS[1])+1000, 1000)]
     try:
       client.add_datasets_to_containers(
         [{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}", "dids": DATASETS_FOR_CONTAINER}]
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     
     rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
       copies=1,
-      meta="sense",
+      # meta="sense",
       rse_expression=args.destination,
       priority=args.priority,
       source_replica_expression=args.source)

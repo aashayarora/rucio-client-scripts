@@ -5,7 +5,7 @@ from rucio.client import Client
 client = Client()
 
 SDSC = {
-    "hostname": "xrootd-sense-redirector-111.sdsc.optiputer.net",
+    "hostname": "xrootd-sense-ucsd-redirector-111.sdsc.optiputer.net",
     "scheme": "davs",
     "port": 1094,
     "prefix": "//",
