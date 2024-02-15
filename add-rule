@@ -63,7 +63,7 @@ if __name__ == '__main__':
     
     rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
       copies=1,
-      # meta="sense",
+      meta="sense",
       rse_expression=args.destination,
       priority=args.priority,
       source_replica_expression=args.source)
