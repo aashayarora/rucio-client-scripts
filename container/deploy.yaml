@@ -1,0 +1,22 @@
+# kubernetes deployment called rucio-client using aaarora/rucio-client image
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rucio-client
+  labels:
+    app: rucio-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rucio-client
+  template:
+    metadata:
+      labels:
+        app: rucio-client
+    spec:
+      containers:
+      - name: rucio-client
+        image: aaarora/rucio-client
+        command: ["sh", "-c"]
+        args: ["while true; do sleep 30; done"]

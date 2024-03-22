@@ -12,6 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--size', type=int, default=1000, help='end_file_num')
     parser.add_argument('--source', type=str, default="T2_US_SDSC", help='source')
     parser.add_argument('--destination', type=str, default="T2_US_Caltech_Test", help='destination')
+    parser.add_argument('--sense', default="False", help='use sense')
 
     args = parser.parse_args()
 
@@ -60,12 +61,20 @@ if __name__ == '__main__':
         )
     except Exception as e:
       print(e)
-    
-    rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
-      copies=1,
-      meta="sense",
-      rse_expression=args.destination,
-      priority=args.priority,
-      source_replica_expression=args.source)
-    
+   
+    if args.sense:
+        rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
+        copies=1,
+        meta="sense",
+        rse_expression=args.destination,
+        priority=args.priority,
+        source_replica_expression=args.source)
+
+    else:
+        rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
+        copies=1,
+        rse_expression=args.destination,
+        priority=args.priority,
+        source_replica_expression=args.source)
+
     print(rule)
