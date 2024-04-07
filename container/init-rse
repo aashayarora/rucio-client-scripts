@@ -92,6 +92,11 @@ client.set_local_account_limit("root", "T1_US_FNAL", "-1" )
 client.add_rse_attribute("T2_US_SDSC", "fts", "https://fts3-pilot.cern.ch:8446")
 client.add_rse_attribute("T2_US_Caltech_Test", "fts", "https://fts3-pilot.cern.ch:8446")
 client.add_rse_attribute("T1_US_FNAL", "fts", "https://fts3-pilot.cern.ch:8446")
+#client.add_rse_attribute("T2_US_SDSC", "fts", "https://cmsftssrv3.fnal.gov:8446")
+#client.add_rse_attribute("T2_US_Caltech_Test", "fts", "https://cmsftssrv3.fnal.gov:8446")
+#client.add_rse_attribute("T1_US_FNAL", "fts", "https://cmsftssrv3.fnal.gov:8446")
+
+
 
 client.add_rse_attribute("T2_US_SDSC", "lfn2pfn_algorithm", "cmstfc")
 client.add_rse_attribute("T2_US_Caltech_Test", "lfn2pfn_algorithm", "cmstfc")

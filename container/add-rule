@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('--size', type=int, default=1000, help='end_file_num')
     parser.add_argument('--source', type=str, default="T2_US_SDSC", help='source')
     parser.add_argument('--destination', type=str, default="T2_US_Caltech_Test", help='destination')
-    parser.add_argument('--sense', default="False", action='store_true', help='use sense')
+    parser.add_argument('--sense', help='use sense', action='store_true')
 
     args = parser.parse_args()
 
