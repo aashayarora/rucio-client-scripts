@@ -31,3 +31,7 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip && \
 COPY rucio.cfg /opt/rucio/etc/rucio.cfg 
 COPY init-rse /home/
 COPY add-rule /home/
+
+COPY cancel_all_fts_jobs.sh /home/cancel_all_fts_jobs.sh
+
+COPY gfal/ /home/gfal/
