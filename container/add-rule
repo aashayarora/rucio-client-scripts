@@ -4,11 +4,11 @@ import argparse
 from rucio.client import Client
 import random
 import string
+import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Args')
     parser.add_argument('--priority', type=int, help='prio')
-    parser.add_argument('--dataset', type=str, help='dataset')
     parser.add_argument('--size', type=int, default=1000, help='how many files from each dataset')
     parser.add_argument('--source', type=str, default="T2_US_SDSC", help='source')
     parser.add_argument('--destination', type=str, default="T2_US_Caltech_Test", help='destination')
@@ -18,61 +18,46 @@ if __name__ == '__main__':
 
     client = Client()
 
-    CONTAINER_SUFFIX = ''.join(random.choices(string.ascii_uppercase, k=4))
+    # 65000-105000 at SDSC, 170000-180000 at Caltech, 105000-115000 at Caltech_Test, 50000-63000 at FNAL
+    datasets = {"T2_US_SDSC": "65000,74000", "T2_US_Caltech": "170000,180000", "T2_US_Caltech_Test": "105000,115000", "T1_US_FNAL": "50000,59000"}
 
-    DATASETS = args.dataset.split(",")
+    DATASET = datasets[args.source]
 
-    for dataset in range(int(DATASETS[0]), int(DATASETS[1])+1000, 1000):
-      FILES = [f"/store/data/Run2018A/EGamma/MINIAOD/UL2018_MiniAODv2-v1/{dataset}/testSourceFile{j}.root" for j in range(args.size)]
+    container_suffix = ''.join(random.choices(string.ascii_uppercase, k=4))
+    dataset_start, dataset_end = int(DATASET.split(",")[0]), int(DATASET.split(",")[1])+1000
 
-      DIDS = [{"scope": "cms", "name": f} for f in FILES]
-      DIDS_W_BYTES = [{"scope": "cms", "name": f, "bytes": 4294967296} for f in FILES]
-
-      try:
-        client.add_replicas(
-          args.source, DIDS_W_BYTES
-        )
-      except Exception as e:
-        print(e)
-
-      try:
+    print("Adding files to datasets")
+    datasets_for_containers = []
+    for dataset in tqdm(range(dataset_start, dataset_end, 1000)):
+        files = [f"/store/data/Run2018A/EGamma/MINIAOD/UL2018_MiniAODv2-v1/{dataset}/testSourceFile{j}.root" for j in range(args.size)]
+        dids = [{"scope": "cms", "name": f} for f in files]
+        dids_w_bytes = [{"scope": "cms", "name": f, "bytes": 4294967296} for f in files]
+        client.add_replicas(args.source, dids_w_bytes)
         client.add_dataset("cms", f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}")
-      except Exception as e:
-        print(e)
+        client.add_files_to_datasets([{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}", "dids": dids}])
 
-      try:
-        client.add_files_to_datasets(
-          [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}", "dids": DIDS}]
-        )
-      except Exception as e:
-        print(e)
+        datasets_for_containers.append({"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"})
 
-    try:
-      client.add_container("cms", f"/SenseTest/Run3/{CONTAINER_SUFFIX}")
-    except Exception as e:
-      print(e)
+    random.shuffle(datasets_for_containers)
 
-    DATASETS_FOR_CONTAINER = [{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"} for dataset in range(int(DATASETS[0]), int(DATASETS[1])+1000, 1000)]
-    try:
-      client.add_datasets_to_containers(
-        [{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}", "dids": DATASETS_FOR_CONTAINER}]
-        )
-    except Exception as e:
-      print(e)
-   
+    print("Adding datasets to container")
+    client.add_container("cms", f"/SenseTest/Run3/{container_suffix}")
+    client.add_datasets_to_containers([{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}", "dids": datasets_for_containers}])
+
+    print("Adding replication rule")
     if args.sense:
-        rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
-        copies=1,
-        meta="sense",
-        rse_expression=args.destination,
-        priority=args.priority,
-        source_replica_expression=args.source)
-
+      rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}"}],
+          copies=1,
+          meta="sense",
+          rse_expression=args.destination,
+          priority=args.priority,
+          source_replica_expression=args.source)
     else:
-        rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{CONTAINER_SUFFIX}"}],
-        copies=1,
-        rse_expression=args.destination,
-        priority=args.priority,
-        source_replica_expression=args.source)
+      print("SENSE NOT USED!!!")
+      rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}"}],
+          copies=1,
+          rse_expression=args.destination,
+          priority=args.priority,
+          source_replica_expression=args.source)
 
-    print(rule[0])
+    print("Rule ID:", rule[0])

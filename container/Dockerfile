@@ -26,7 +26,8 @@ RUN yum install -y https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el9-release-
 RUN python3 -m pip install --no-cache-dir --upgrade pip && \
     python3 -m pip install --no-cache-dir --upgrade setuptools && \
     python3 -m pip install --no-cache-dir --pre rucio-clients && \
-    python3 -m pip install --no-cache-dir jinja2 j2cli pyyaml
+    python3 -m pip install --no-cache-dir jinja2 j2cli pyyaml && \
+    python3 -m pip install --no-cache-dir tqdm
 
 COPY rucio.cfg /opt/rucio/etc/rucio.cfg 
 COPY init-rse /home/

@@ -11,27 +11,25 @@ sites = {
         "hostname": "xrootd-sense-ucsd-redirector-111.sdsc.optiputer.net",
         "scheme": "davs",
         "port": 1094,
-        "prefix": "//store/temp"
-        # "prefix": "//"
-    },
-    "T2_US_Caltech_Test": {
-        "hostname": "sense-redir-01.ultralight.org",
-        "scheme": "davs",
-        "port": 1094,
-        "prefix": "//store/temp"
-        # "prefix": "//store/data" 
-    },
-    "T1_US_FNAL": {
-        "hostname": "cmssense4-origin-2841-1.fnal.gov",
-        "scheme": "davs",
-        "port": 2880,
-        "prefix": "//dcache/store/temp"
+        "prefix": "//temp"
     },
     "T2_US_Caltech": {
         "hostname": "redir-01.t2-sense.ultralight.org",
         "scheme": "davs",
         "port": 1094,
-        "prefix": "//store/temp"
+        "prefix": "//"
+    },
+    "T2_US_Caltech_Test": {
+        "hostname": "sense-redir-01.ultralight.org",
+        "scheme": "davs",
+        "port": 1094,
+        "prefix": "//" 
+    },
+    "T1_US_FNAL": {
+        "hostname": "cmssense2-origin-2841-1.fnal.gov",
+        "scheme": "davs",
+        "port": 2880,
+        "prefix": "//dcache/store/temp"
     },
     "T2_US_Nebraska_Test": {
         "hostname": "red-sense-dtn1.unl.edu",
@@ -63,7 +61,8 @@ for site, site_info in sites.items():
     client.add_rse(site)
     client.add_protocol(site, site_info)
     client.set_local_account_limit("root", site, "-1")
-    client.add_rse_attribute(site, "fts", "https://fts3-pilot.cern.ch:8446")
+    client.add_rse_attribute(site, "fts", "https://cmsftssrv3.fnal.gov:8446")
+    # client.add_rse_attribute(site, "fts", "https://fts3-pilot.cern.ch:8446")
     client.add_rse_attribute(site, "lfn2pfn_algorithm", "cmstfc")
     client.add_rse_attribute(site, "verify_checksum", "false")
 
@@ -73,3 +72,5 @@ for src, dst in iterator:
     client.add_distance(dst, src, {"ranking": 1, "distance": 1})
 
 client.add_scope("root", "cms")
+
+print(f"RSEs: {[i['rse'] for i in client.list_rses()]}")
