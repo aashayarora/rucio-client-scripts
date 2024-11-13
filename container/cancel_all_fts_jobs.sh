@@ -1,6 +1,7 @@
 #!/bin/bash
 
-json_output=$(fts-rest-transfer-list -s https://fts3-pilot.cern.ch:8446 --json ACTIVE,SUBMITTED 2>/dev/null)
+FTS=$1
+json_output=$(fts-rest-transfer-list -s $FTS --json ACTIVE,SUBMITTED 2>/dev/null)
 
 if [ $? -eq 0 ]; then
     if [ -n "$json_output" ]; then
@@ -11,7 +12,7 @@ if [ $? -eq 0 ]; then
         else
             for job_id in "${job_ids[@]}"; do
                 echo "Canceling job: $job_id"
-                fts-rest-transfer-cancel -s https://fts3-pilot.cern.ch:8446 "$job_id"
+                fts-rest-transfer-cancel -s $FTS "$job_id"
             done
         fi
     else

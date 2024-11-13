@@ -4,7 +4,7 @@ import argparse
 from rucio.client import Client
 import random
 import string
-import tqdm
+from tqdm import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Args')

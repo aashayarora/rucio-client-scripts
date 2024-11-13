@@ -24,6 +24,10 @@ spec:
           value: "/home/x509"
         image: aaarora/rucio-client
         command: ["sh", "-c"]
+        volumeMounts:
+        - name: rucio-server-rucio-x509up
+          mountPath: /home/x509
+          subPath: x509up
         resources:
           limits:
             cpu: 4
@@ -34,3 +38,7 @@ spec:
         args: ["while true; do sleep 30; done"]
       nodeSelector:
         nautilus.io/ipv6: "true"
+      volumes:
+      - name: rucio-server-rucio-x509up
+        secret:
+          secretName: rucio-server-rucio-x509up
