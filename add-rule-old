@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+import argparse
+import random
+import string
+import time
+
+from rucio.client import Client
+from tqdm import tqdm
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Args')
+    parser.add_argument('--priority', type=int, help='prio')
+    parser.add_argument('--size', type=int, default=1000, help='how many files from each dataset')
+    parser.add_argument('--source', type=str, required=True, help='source')
+    parser.add_argument('--destination', type=str, required=True, help='destination')
+    parser.add_argument('--sense', help='use sense', action='store_true')
+    parser.add_argument('--dataset', type=str, help='dataset', default=None)
+
+    args = parser.parse_args()
+
+    if not args.sense:
+        print("NOT USING SENSE!! CANCEL NOW IF YOU DIDN'T MEAN TO DO THIS, YOU HAVE 10 SECONDS")
+        time.sleep(10)        
+
+    client = Client()
+
+    if args.dataset:
+        DATASET = args.dataset
+    else:
+        datasets = {
+            "T2_US_SDSC": "65000,74000", 
+            "T2_US_Caltech": "170000,180000", 
+            "T2_US_Caltech_Test": "105000,115000", 
+            "T1_US_FNAL": "50000,59000", 
+            "T2_US_Nebraska": "130000,140000"
+        }
+        DATASET = datasets[args.source]
+
+    container_suffix = ''.join(random.choices(string.ascii_uppercase, k=4))
+    dataset_start, dataset_end = int(DATASET.split(",")[0]), int(DATASET.split(",")[1])+1000
+
+    print("Adding files to datasets")
+    datasets_for_containers = []
+    for dataset in tqdm(range(dataset_start, dataset_end, 1000)):
+        files = [f"/store/data/Run2018A/EGamma/MINIAOD/UL2018_MiniAODv2-v1/{dataset}/testSourceFile{j}.root" for j in range(args.size)]
+        dids = [{"scope": "cms", "name": f} for f in files]
+        dids_w_bytes = [{"scope": "cms", "name": f, "bytes": 4294967296} for f in files]
+        try:
+            client.add_replicas(args.source, dids_w_bytes)
+        except:
+            continue # ignore if file already exists
+        client.add_dataset("cms", f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}")
+        client.add_files_to_datasets([{"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}", "dids": dids}])
+
+        datasets_for_containers.append({"scope": "cms", "name": f"/SenseTest/Run2022-03Jan2023/MYDATA#{dataset}"})
+
+    random.shuffle(datasets_for_containers)
+
+    print("Adding datasets to container")
+    client.add_container("cms", f"/SenseTest/Run3/{container_suffix}")
+    client.add_datasets_to_containers([{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}", "dids": datasets_for_containers}])
+
+    print("Adding replication rule")
+    if args.sense:
+      rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}"}],
+          copies=1,
+          activity="SENSE Test",
+          rse_expression=args.destination,
+          priority=args.priority,
+          source_replica_expression=args.source)
+    else:
+      rule = client.add_replication_rule(dids=[{"scope": "cms", "name": f"/SenseTest/Run3/{container_suffix}"}],
+          copies=1,
+          rse_expression=args.destination,
+          priority=args.priority,
+          source_replica_expression=args.source)
+
+    print("Rule ID:", rule[0])

@@ -8,41 +8,35 @@ client = Client()
 # add new sites to this dict, please use the same name (key) as configured in siterm
 sites = {
     "T2_US_SDSC": {
-        "hostname": "xrootd-sense-ucsd-redirector-112.sdsc.optiputer.net",
+        "hostname": "xrootd-sense-ucsd-redirector.sdsc.optiputer.net",
         "scheme": "davs",
         "port": 1094,
         "prefix": "//temp"
     },
     "T2_US_Caltech": {
-        "hostname": "redir-01.t2-sense.ultralight.org",
+        "hostname": "redir.t2-sense.ultralight.org",
         "scheme": "davs",
         "port": 1094,
-        "prefix": "//"
-    },
-    "T2_US_Caltech_Test": {
-        "hostname": "sense-redir-01.ultralight.org",
-        "scheme": "davs",
-        "port": 1094,
-        "prefix": "//" 
+        "prefix": "//store/group/tests-sense"
     },
     "T1_US_FNAL": {
-        "hostname": "cmssense2-origin-2842-1.fnal.gov",
+        "hostname": "cmssense5-origin-2842-1.fnal.gov",
         "scheme": "davs",
         "port": 2880,
         "prefix": "//dcache/store/temp"
     },
-    "T2_US_Nebraska_Test": {
-        "hostname": "red-sense-dtn2.unl.edu",
-        "scheme": "davs",
-        "port": 1095,
-        "prefix": "//"
-    },
     "T2_US_Nebraska": {
-        "hostname": "red-sense-dtn3.unl.edu",
+        "hostname": "red-sense-dtn3-macvlan0.unl.edu",
         "scheme": "davs",
         "port": 1095,
         "prefix": "//"
     },
+    "T2_US_MGHPCC": {
+        "hostname": "xrootd-0-redir.rnd.net2.mghpcc.org",
+        "scheme": "davs",
+        "port": 1094,
+        "prefix": "//"
+    }
 }
 
 ### No change needed below this line ###
@@ -64,18 +58,26 @@ for site in sites.values():
                 }})
 
 for site, site_info in sites.items():
-    client.add_rse(site)
-    client.add_protocol(site, site_info)
-    client.set_local_account_limit("root", site, "-1")
-    client.add_rse_attribute(site, "fts", "https://cmsftssrv3.fnal.gov:8446")
-    # client.add_rse_attribute(site, "fts", "https://fts3-pilot.cern.ch:8446")
-    client.add_rse_attribute(site, "lfn2pfn_algorithm", "cmstfc")
-    client.add_rse_attribute(site, "verify_checksum", "false")
+    try:
+        print(f"Adding {site}")
+        client.add_rse(site)
+        client.add_protocol(site, site_info)
+        client.set_local_account_limit("root", site, "-1")
+        client.add_rse_attribute(site, "fts", "https://cmsftssrv3.fnal.gov:8446")
+        # client.add_rse_attribute(site, "fts", "https://fts3-pilot.cern.ch:8446")
+        client.add_rse_attribute(site, "lfn2pfn_algorithm", "cmstfc")
+        client.add_rse_attribute(site, "verify_checksum", "false")
+    except Exception as e:
+        print(e)
+        continue
 
 iterator = itertools.combinations(sites.keys(), 2)
 for src, dst in iterator:
-    client.add_distance(src, dst, {"ranking": 1, "distance": 1})
-    client.add_distance(dst, src, {"ranking": 1, "distance": 1})
+    try:
+        client.add_distance(src, dst, {"ranking": 1, "distance": 1})
+        client.add_distance(dst, src, {"ranking": 1, "distance": 1})
+    except:
+        continue
 
 client.add_scope("root", "cms")
 
